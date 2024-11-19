@@ -4,6 +4,8 @@ Image Processing 2024 Fall 4-person team project
 # Authors
 - **2j2h5**
     - [Github](https://github.com/2j2h5)
+- **chaquentin**
+    - [Github](https://github.com/chaquentin)
 
 # Structure
 ![Structure](./images/structure.jpg)
