@@ -6,6 +6,10 @@ Image Processing 2024 Fall 4-person team project
     - [Github](https://github.com/2j2h5)
 - **chaquentin**
     - [Github](https://github.com/chaquentin)
+- **ThibaultMir**
+    - [Github](https://github.com/ThibaultMir)
+- **Chrysanthemum3552**
+    - [Github](https://github.com/Chrysanthemum3552)
 
 # Structure
 ![Structure](./images/structure.jpg)
