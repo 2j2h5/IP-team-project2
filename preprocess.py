@@ -60,11 +60,11 @@ def _reduce_image(image, size=28):
     aspect_ratio = image.width / image.height
 
     if aspect_ratio > 1:
-        new_width = size
-        new_height = int(size / aspect_ratio)
+        new_width = size-6
+        new_height = int((size-6) / aspect_ratio)
     else:
-        new_width = int(size * aspect_ratio)
-        new_height = size
+        new_width = int((size-6) * aspect_ratio)
+        new_height = size-6
 
     reduced_image = image.resize((new_width, new_height))
     padded_image = Image.new("L", (size, size), 255)
