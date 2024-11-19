@@ -7,6 +7,7 @@ Image Processing 2024 Fall 4-person team project
 
 # Structure
 ![Structure](./images/structure.jpg)
+
 This is the structure of the repository. The blue line represents the number prediction for a car license plate image using params.pkl after preprocessing the image. The params.pkl file is created by the train_conv_net code, which trains the simple_conv_net model using the MNIST dataset, as indicated by the orange line. The simple_conv_net model consists of layers defined in the CNN_layers and layers modules, which utilize activation and loss functions.
 
 You can predict car license plate numbers by running classifier.py. This code first preprocesses the input by slicing the license plate image into individual characters. Then, it predicts each character, with the results printed to the console.
