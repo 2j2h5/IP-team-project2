@@ -33,7 +33,6 @@ class Classifier:
 
         korean_character = merge_korean(korean_slices)
         korean_character.show()
-        korean_character.save("k.jpg")
         korean_array = np.array(korean_character)
         korean_array = korean_array[np.newaxis, np.newaxis, :, :]
         korean_array = korean_array.astype(np.float32)
