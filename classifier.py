@@ -1,22 +1,32 @@
-from PIL import Image
 from preprocess import *
-from simple_conv_net import SimpleConvNet
 
-network = SimpleConvNet(input_dim=(1, 28, 28),
-                        conv_param={'filter_num': 30, 'filter_size': 5, 'pad': 0, 'stride': 1},
-                        hidden_size=100, output_size=10, weight_init_std=0.01)
+class Classifier:
+    def __init__(self, network):
+        self.network = network
+        self.plate_image = None
+        self.slices = None
+        self.license_plate = ""
 
-network.load_params("params.pkl")
+    def set_image(self, plate_image):
+        self.plate_image = plate_image
 
-image_path = 'images/number-plate-clean.jpg'
-number_plate = Image.open(image_path).convert('L')
+    def get_license_plate(self):
+        if self.plate_image:
+            self.slices = preprocess(self.plate_image)
+        else:
+            raise ValueError("There isn't plate image")
+        
+        number_slices = self.slices[:3] + self.slices[-4:]
+        korean_slices = self.slices[3:-4]
 
-slices = preprocess(number_plate)
-for slice in slices:
-    slice_array = np.array(slice)
-    slice_array = slice_array[np.newaxis, np.newaxis, :, :]
-    slice_array = slice_array.astype(np.float32)
+        for slice in number_slices:
+            slice_array = np.array(slice)
+            slice_array = slice_array[np.newaxis, np.newaxis, :, :]
+            slice_array = slice_array.astype(np.float32)
 
-    scores = network.predict(slice_array)
-    predicted_label = np.argmax(scores)
-    print(predicted_label)
+            scores = self.network.predict(slice_array)
+            predicted_label = np.argmax(scores)
+            self.license_plate += str(predicted_label)
+
+        for slice in korean_slices:
+            slice.show()
