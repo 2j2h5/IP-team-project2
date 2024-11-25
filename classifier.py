@@ -1,8 +1,11 @@
 from preprocess import *
 
+KOREAN_LABEL = "가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주아바사자배하허호국합육해공외교영준기협정대표"
+
 class Classifier:
-    def __init__(self, network):
+    def __init__(self, network, hangul_network):
         self.network = network
+        self.hangul_network = hangul_network
         self.plate_image = None
         self.slices = None
         self.license_plate = ""
@@ -28,5 +31,16 @@ class Classifier:
             predicted_label = np.argmax(scores)
             self.license_plate += str(predicted_label)
 
-        for slice in korean_slices:
-            slice.show()
+        korean_character = merge_korean(korean_slices)
+        korean_character.show()
+        korean_character.save("k.jpg")
+        korean_array = np.array(korean_character)
+        korean_array = korean_array[np.newaxis, np.newaxis, :, :]
+        korean_array = korean_array.astype(np.float32)
+
+        scores = self.hangul_network.predict(korean_array)
+        predicted_label = np.argmax(scores)
+        predicted_label = KOREAN_LABEL[predicted_label]
+        self.license_plate = self.license_plate[:3] + predicted_label + self.license_plate[3:]
+
+        print(self.license_plate)

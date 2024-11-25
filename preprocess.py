@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
 import numpy as np
 
 def _get_row_histogram(image, threshold=128):
@@ -90,3 +90,30 @@ def preprocess(image, threshold=128, size=28, invert=True):
             result.append(reduced_slice)
 
     return result
+
+def merge_korean(slices, threshold=128, size=28):
+    vertical_slices = []
+    for slice in slices:
+        slice = ImageOps.invert(slice)
+        row_histogram = _get_row_histogram(slice, threshold)
+        vertical_slice = _slice_vetically(slice, row_histogram)
+        vertical_slices.append(vertical_slice[0])
+
+    widths, heights = zip(*(slice.size for slice in vertical_slices))
+    total_width = sum(widths) + 3*(len(slices)-1)
+    total_height = max(heights)
+
+    merged = Image.new("L", (total_width, total_height), color=255)
+    x_offset = 0
+
+    for slice in vertical_slices:
+        merged.paste(slice, (x_offset, 0))
+        x_offset += (slice.width + 3)
+
+    resized = _reduce_image(merged, size)
+    resized = ImageOps.invert(resized)
+
+    #resized = resized.filter(ImageFilter.MinFilter(size=3))
+    #resized = resized.filter(ImageFilter.SHARPEN)
+
+    return resized
