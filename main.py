@@ -22,4 +22,7 @@ plate_image = Image.open(image_path).convert('L')
 #do classification
 classifier = Classifier(network, hangul_network)
 classifier.set_image(plate_image)
-classifier.get_license_plate()
+license_number = classifier.get_license_plate()
+print(license_number)
+vehicle_type = classifier.parse_license_plate()
+print(vehicle_type)
