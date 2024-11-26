@@ -91,7 +91,7 @@ def preprocess(image, threshold=128, size=28, invert=True):
 
     return result
 
-def merge_korean(slices, threshold=128, size=28):
+def merge_korean(slices, threshold=128, size=28, gap=4):
     vertical_slices = []
     for slice in slices:
         slice = ImageOps.invert(slice)
@@ -99,21 +99,30 @@ def merge_korean(slices, threshold=128, size=28):
         vertical_slice = _slice_vetically(slice, row_histogram)
         vertical_slices.append(vertical_slice[0])
 
-    widths, heights = zip(*(slice.size for slice in vertical_slices))
-    total_width = sum(widths) + 3*(len(slices)-1)
-    total_height = max(heights)
+    if len(vertical_slices) == 1:
+        resized = _reduce_image(vertical_slices[0], size)
+        resized = ImageOps.invert(resized)
 
-    merged = Image.new("L", (total_width, total_height), color=255)
-    x_offset = 0
+    elif len(vertical_slices) == 2:
+        consonant = vertical_slices[0]
+        vowel = vertical_slices[1]
 
-    for slice in vertical_slices:
-        merged.paste(slice, (x_offset, 0))
-        x_offset += (slice.width + 3)
+        c_width, c_height = consonant.size
+        v_width, v_height = vowel.size
 
-    resized = _reduce_image(merged, size)
-    resized = ImageOps.invert(resized)
+        merged_width = c_width + v_width + gap
+        merged_height = max(c_height, v_height)
 
-    #resized = resized.filter(ImageFilter.MinFilter(size=3))
-    #resized = resized.filter(ImageFilter.SHARPEN)
+        merged = Image.new("L", (merged_width, merged_height), color=255)
+        merged.paste(consonant, (0, 0))
+        merged.paste(vowel, (c_width + gap, 0))
+        
+        column_histogram = _get_column_histogram(merged, threshold)
+        horizontal_slice = _slice_horizontally(merged, column_histogram)
+
+        resized = _reduce_image(horizontal_slice, size)
+        resized = ImageOps.invert(resized)
+        #resized = resized.filter(ImageFilter.SHARPEN)
+        #resized = resized.filter(ImageFilter.MaxFilter(size=3))
 
     return resized
