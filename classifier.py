@@ -12,6 +12,8 @@ class Classifier:
 
     def set_image(self, plate_image):
         self.plate_image = plate_image
+        self.slices = None
+        self.license_plate = ""
 
     def get_license_plate(self):
         if self.plate_image:

@@ -75,7 +75,13 @@ def _reduce_image(image, size=28):
 
     return padded_image
 
+def _denoise(image):
+    denoised = image.filter(ImageFilter.MedianFilter(size=3))
+    return denoised
+
 def preprocess(image, threshold=128, size=28, invert=True):
+    image = _denoise(image)
+    image = image.point(lambda p: p> threshold and 255)
     slices = _slice_image(image, threshold)
     result = []
 
