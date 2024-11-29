@@ -19,7 +19,7 @@ class Classifier:
         if self.plate_image:
             self.slices = preprocess(self.plate_image, threshold)
         else:
-            raise ValueError("There isn't plate image")
+            raise ValueError("There is no plate image")
         
         number_slices = self.slices[:3] + self.slices[-4:]
         korean_slices = self.slices[3:-4]

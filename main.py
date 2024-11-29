@@ -19,15 +19,17 @@ hangul_network.load_params("hangul-params.pkl")
 image_path = 'images/number-plate/number-plate-clean-1.jpg'
 image_path2 = 'images/number-plate/number-plate-clean-2.jpg'
 image_path3 = 'images/number-plate/number-plate-clean-3.jpg'
+image_path4 = 'images/number-plate/number-plate-clean-4.jpg'
 
 plate_image = Image.open(image_path).convert('L')
 plate_image2 = Image.open(image_path2).convert('L')
 plate_image3 = Image.open(image_path3).convert('L')
+plate_image4 = Image.open(image_path4).convert('L')
 
 #do classification
 classifier = Classifier(network, hangul_network)
 
-classifier.set_image(plate_image)
+""" classifier.set_image(plate_image)
 license_number = classifier.get_license_plate()
 print(license_number)
 vehicle_type = classifier.parse_license_plate()
@@ -40,6 +42,12 @@ vehicle_type = classifier.parse_license_plate()
 print(vehicle_type)
 
 classifier.set_image(plate_image3)
+license_number = classifier.get_license_plate()
+print(license_number)
+vehicle_type = classifier.parse_license_plate()
+print(vehicle_type) """
+
+classifier.set_image(plate_image4)
 license_number = classifier.get_license_plate()
 print(license_number)
 vehicle_type = classifier.parse_license_plate()
