@@ -83,6 +83,16 @@ def preprocess(image, threshold=128, size=28, invert=True):
     image = _denoise(image)
     image = image.point(lambda p: p> threshold and 255)
     slices = _slice_image(image, threshold)
+
+    while threshold < 256 and len(slices)==0:
+        threshold += 1
+        print(threshold)
+        image = image.point(lambda p: p> threshold and 255)
+        slices = _slice_image(image, threshold)
+
+    if threshold==256:
+        raise ValueError("There are no numbers detected")
+
     result = []
 
     if invert:

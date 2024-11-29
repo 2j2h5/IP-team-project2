@@ -15,9 +15,9 @@ class Classifier:
         self.slices = None
         self.license_plate = ""
 
-    def get_license_plate(self):
+    def get_license_plate(self, threshold=128):
         if self.plate_image:
-            self.slices = preprocess(self.plate_image)
+            self.slices = preprocess(self.plate_image, threshold)
         else:
             raise ValueError("There isn't plate image")
         
