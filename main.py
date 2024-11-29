@@ -1,7 +1,42 @@
-from PIL import Image
+from PIL import Image, ImageTk
 from simple_conv_net import SimpleConvNet
 from hangul_conv_net import HangulConvNet
 from classifier import Classifier
+import tkinter as tk
+from tkinter import filedialog
+from tkinter import messagebox
+
+# Call for the classification function
+def do_classification():
+    classifier = Classifier(network, hangul_network)
+    plate = Image.open(preview_label.file_path).convert('L')
+    classifier.set_image(plate)
+    license_number = classifier.get_license_plate()
+    print(license_number)
+    vehicle_type = classifier.parse_license_plate()
+    print(vehicle_type)
+
+# import image from file dialog
+def import_image():
+    file_path = filedialog.askopenfilename(
+        title="Select an Image",
+        filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif")])
+    if file_path:
+        do_classification.image_path = file_path
+        load_preview(file_path, preview_label)
+
+# load image to preview label
+def load_preview(file_path, preview_label):
+    try:
+        image = Image.open(file_path)
+        image.thumbnail((200, 200))
+        tk_image = ImageTk.PhotoImage(image)
+        preview_label.config(image=tk_image)
+        preview_label.image = tk_image
+        preview_label.file_path = file_path
+        preview_label.pack()
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load image: {e}")
 
 #prepare SimpleConvNet
 network = SimpleConvNet(input_dim=(1, 28, 28),
@@ -16,31 +51,28 @@ hangul_network = HangulConvNet(input_dim=(1,28,28),
 hangul_network.load_params("hangul-params.pkl")
 
 #prepare image
-image_path = 'images/number-plate/number-plate-clean-1.jpg'
-image_path2 = 'images/number-plate/number-plate-clean-2.jpg'
-image_path3 = 'images/number-plate/number-plate-clean-3.jpg'
+# image_path = 'images/number-plate/number-plate-clean-1.jpg'
+# image_path2 = 'images/number-plate/number-plate-clean-2.jpg'
+# image_path3 = 'images/number-plate/number-plate-clean-3.jpg'
 
-plate_image = Image.open(image_path).convert('L')
-plate_image2 = Image.open(image_path2).convert('L')
-plate_image3 = Image.open(image_path3).convert('L')
+# plate_image = Image.open(image_path).convert('L')
+# plate_image2 = Image.open(image_path2).convert('L')
+# plate_image3 = Image.open(image_path3).convert('L')
 
-#do classification
-classifier = Classifier(network, hangul_network)
+# Build GUI
+root = tk.Tk()
+root.title("Image Processing group project 1")
 
-classifier.set_image(plate_image)
-license_number = classifier.get_license_plate()
-print(license_number)
-vehicle_type = classifier.parse_license_plate()
-print(vehicle_type)
+button_frame = tk.Frame(root)
+button_frame.pack(pady=10)
 
-classifier.set_image(plate_image2)
-license_number = classifier.get_license_plate()
-print(license_number)
-vehicle_type = classifier.parse_license_plate()
-print(vehicle_type)
+import_button = tk.Button(button_frame, text="Import Image", command=import_image)
+import_button.pack(side=tk.LEFT, padx=5)
 
-classifier.set_image(plate_image3)
-license_number = classifier.get_license_plate()
-print(license_number)
-vehicle_type = classifier.parse_license_plate()
-print(vehicle_type)
+process_button = tk.Button(button_frame, text="Process", command=do_classification)
+process_button.pack(side=tk.LEFT, padx=5)
+
+preview_label = tk.Label(root)
+preview_label.pack(pady=10)
+
+root.mainloop()
