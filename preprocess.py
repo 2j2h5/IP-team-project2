@@ -124,7 +124,6 @@ def preprocess(image, threshold=128, size=28, invert=True):
 
     if invert:
         for slice in slices:
-            slice.show()
             reduced_slice = _reduce_image(slice, size)
             inverted_slice = ImageOps.invert(reduced_slice)
             result.append(inverted_slice)
