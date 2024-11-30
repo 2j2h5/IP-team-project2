@@ -17,7 +17,7 @@ class Classifier:
         self.license_plate = ""
         self.korean_offset = 0
 
-    def get_license_plate(self, threshold=128):
+    def get_license_plate(self, threshold=128): # get license from input image
         if self.plate_image:
             self.slices = preprocess(self.plate_image, threshold)
         else:

@@ -2,6 +2,7 @@ from PIL import Image, ImageOps, ImageFilter
 import numpy as np
 import scipy.ndimage as ndimage
 
+# Functions for preprocess in line 155 ===================================================
 def _get_row_histogram(image, threshold=128):
     binary_image = image.point(lambda p: p> threshold and 255)
     binary_array = np.array(binary_image)
@@ -101,7 +102,7 @@ def _slice_image(image, threshold=128):
 
     return horizontal_slices
 
-def _reduce_image(image, size=28):
+def _reduce_image(image, size=28): # reduce size of image to 28x28 fit on Simple Conv Net and Hangul Conv Net
     aspect_ratio = image.width / image.height
 
     if aspect_ratio > 1:
@@ -120,7 +121,7 @@ def _reduce_image(image, size=28):
 
     return padded_image
 
-def _denoise(image):
+def _denoise(image): # denoise by median filter and remove small objects using ndimage.find_objects
     filter_size = image.height // 30
     if (filter_size) % 2 == 0:
         filter_size += 1
@@ -150,11 +151,14 @@ def _denoise(image):
 
     return denoised
 
+# Preprocessing function that slice plate to each numbers and korean character ============================
 def preprocess(image, threshold=128, size=28, invert=True):
     original = image
     image = _denoise(image)
-    #image = image.point(lambda p: p> threshold and 255)
     slices = _slice_image(image, threshold)
+
+    # This part for binarizing, but input image is already binarized because we use YOLO model
+    """
     return_flag = False
     
     while threshold < 256 and threshold >= 0 and (len(slices)!=7 and len(slices)!=8 and len(slices)!=9):
@@ -172,21 +176,24 @@ def preprocess(image, threshold=128, size=28, invert=True):
     
     if threshold==256:
         raise ValueError("There is no numbers detected")
+    """
 
     result = []
 
-    if invert:
+    if invert: # if invert==True, then results is black background and white characters
         for slice in slices:
             reduced_slice = _reduce_image(slice, size)
             inverted_slice = ImageOps.invert(reduced_slice)
             result.append(inverted_slice)
-    else:
+    else: # if invert==False, then results is white background and black characters
         for slice in slices:
             reduced_slice = _reduce_image(slice, size)
             result.append(reduced_slice)
 
     return result
 
+# If korean character sliced vertically such as '가', then this function merge them =========================
+# this function called at classifier.py line 54
 def merge_korean(slices, threshold=128, size=28, gap=4):
     vertical_slices = []
     for slice in slices:
@@ -195,11 +202,11 @@ def merge_korean(slices, threshold=128, size=28, gap=4):
         vertical_slice = _slice_vetically(slice, row_histogram)
         vertical_slices.append(vertical_slice[0])
 
-    if len(vertical_slices) == 1:
+    if len(vertical_slices) == 1: # If not sliced such as '주', then just return
         resized = _reduce_image(vertical_slices[0], size)
         resized = ImageOps.invert(resized)
 
-    elif len(vertical_slices) == 2:
+    elif len(vertical_slices) == 2: # If sliced such as '가', then merge
         consonant = vertical_slices[0]
         vowel = vertical_slices[1]
 
@@ -218,7 +225,5 @@ def merge_korean(slices, threshold=128, size=28, gap=4):
 
         resized = _reduce_image(horizontal_slice, size)
         resized = ImageOps.invert(resized)
-        #resized = resized.filter(ImageFilter.SHARPEN)
-        #resized = resized.filter(ImageFilter.MaxFilter(size=3))
 
     return resized

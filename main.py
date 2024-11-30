@@ -8,25 +8,26 @@ from tkinter import messagebox
 import plate_focus
 import os
 
-# Call for the classification function
+# Call for the classification function==============================================
 def do_classification():
-    classifier = Classifier(network, hangul_network)
+    classifier = Classifier(network, hangul_network) # prepare our Classifier
 
-    plate_focus.plate_focus(preview_label.file_path)
+    plate_focus.plate_focus(preview_label.file_path) # YOLO model detect car number plate and save as 'plate.jpg' after grayscaling, binarizing, denoizing
     plate = Image.open('plate.jpg').convert('L')
+    # plate.show() #if you want to look result of YOLO models detection, just decomment plate.show()
     if os.path.exists("plate.jpg"):
         os.remove("plate.jpg")
     
-    classifier.set_image(plate)
+    classifier.set_image(plate) # our classfier do classfy what the number of plate using Simple Conv Net, Hangul Conv Net
     license_number = classifier.get_license_plate()
     vehicle_type = classifier.parse_license_plate()
 
-    license_label.config(text=f"License Number: {license_number}")
+    license_label.config(text=f"License Number: {license_number}") # visualize result of our classifier on to tkinter GUI
     vehicle_label.config(text=f"Vehicle Type: {vehicle_type['vehicleBodyType']}")
     usage_label.config(text=f"Usage: {vehicle_type['usage']}")
     
 
-# import image from file dialog
+# Import image from file dialog======================================================
 def import_image():
     file_path = filedialog.askopenfilename(
         title="Select an Image",
@@ -35,11 +36,12 @@ def import_image():
         do_classification.image_path = file_path
         load_preview(file_path, preview_label)
 
-    license_label.config(text="License Number: ")
+    license_label.config(text="License Number: ") # clear labels if there is new image unclassified
     vehicle_label.config(text="Vehicle Type: ")
     usage_label.config(text="Usage: ")
 
-# load image to preview label
+
+# Load image to preview label=========================================================
 def load_preview(file_path, preview_label):
     try:
         image = Image.open(file_path)
@@ -52,29 +54,22 @@ def load_preview(file_path, preview_label):
     except Exception as e:
         messagebox.showerror("Error", f"Failed to load image: {e}")
 
-#prepare SimpleConvNet
+
+# Prepare CNN models==================================================================================
+# prepare SimpleConvNet
 network = SimpleConvNet(input_dim=(1, 28, 28),
                         conv_param={'filter_num': 30, 'filter_size': 5, 'pad': 0, 'stride': 1},
                         hidden_size=100, output_size=10, weight_init_std=0.01)
-network.load_params("params.pkl")
+network.load_params("params.pkl") #use pre-trained parameter
 
-#prepare HangulConvNet
+# prepare HangulConvNet
 hangul_network = HangulConvNet(input_dim=(1,28,28), 
                         conv_param = {'filter_num': 30, 'filter_size': 5, 'pad': 0, 'stride': 1},
                         hidden_size=500, output_size=54, weight_init_std=0.01)
-hangul_network.load_params("hangul-params.pkl")
+hangul_network.load_params("hangul-params.pkl") #use pre-trained parameter
 
-#prepare image
 
-# image_path = 'images/number-plate/number-plate-clean-1.jpg'
-# image_path2 = 'images/number-plate/number-plate-clean-2.jpg'
-# image_path3 = 'images/number-plate/number-plate-clean-3.jpg'
-
-# plate_image = Image.open(image_path).convert('L')
-# plate_image2 = Image.open(image_path2).convert('L')
-# plate_image3 = Image.open(image_path3).convert('L')
-
-# Build GUI
+# Build GUI===========================================================================================
 root = tk.Tk()
 root.title("Image Processing group project 1")
 

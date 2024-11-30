@@ -9,10 +9,10 @@ import numpy as np
 pytesseract.pytesseract.tesseract_cmd = r'./Tesseract-OCR/tesseract.exe'
 
 def plate_focus(path):
+    # YOLO model detect number plate and crop left irrelevant part======================================
     model = YOLO('best.pt')
 
     results = model(path)
-
     plate = cv2.imread(path)
 
     for i, box in enumerate(results[0].boxes):
@@ -20,9 +20,16 @@ def plate_focus(path):
         plate = plate[int(y1):int(y2), int(x1):int(x2)]
     
     gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
-    pixels_to_crop = gray.shape[1] // 12
+    pixels_to_crop = gray.shape[1] // 12 # irrelevant part to numbers
     gray = gray[:, pixels_to_crop:]
 
+    # if you want to look result of YOLO model, just decomment below two line
+    #plt.imshow(gray, cmap='gray')
+    #plt.show()
+
+    # Denoizing by OpneCV function, connectedComponentsWithStats =======================================
+    # with the function, we can remove irrelevant parts connected with out border, this is necessary for our classfier using histogram
+    # if histogram value is not 0 in end, our classifier will not work
     _, binary = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     resized = cv2.resize(binary, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
 
@@ -43,18 +50,12 @@ def plate_focus(path):
 
     resized = cv2.bitwise_or(binary, mask)
 
-    #plt.imshow(resized,cmap='gray')
-    #plt.show()
-
-    cv2.imwrite("preprocessed_plate.jpg", resized)
-
-    if os.path.exists("preprocessed_plate.jpg"):
-        os.remove("preprocessed_plate.jpg")
-
-    if not os.path.exists("plate.jpg"):
+    if not os.path.exists("plate.jpg"): #save result as plate.jpg
         cv2.imwrite("plate.jpg", resized)
 
-"""     config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주아바사자배하허호국합육해공외교영준기협정대표'
+    # This part for using Tesseract, a OCR machine to classify text. But we don't use it ================
+""" 
+    config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주아바사자배하허호국합육해공외교영준기협정대표'
 
     results = pytesseract.image_to_data(Image.fromarray(resized), lang='kor', output_type=pytesseract.Output.DICT, config=config)
 
@@ -65,5 +66,4 @@ def plate_focus(path):
         cv2.rectangle(resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
         print(results['text'][i])
         cv2.imwrite("plate.jpg", resized[y:y+h, x:x+w])
-    
  """
