@@ -5,11 +5,16 @@ from classifier import Classifier
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+import plate_focus
+import os
 
 # Call for the classification function
 def do_classification():
     classifier = Classifier(network, hangul_network)
-    plate = Image.open(preview_label.file_path).convert('L')
+    plate_focus.plate_focus(preview_label.file_path)
+    plate = Image.open('plate.jpg').convert('L')
+    if os.path.exists("plate.jpg"):
+        os.remove("plate.jpg")
     classifier.set_image(plate)
     license_number = classifier.get_license_plate()
     print(license_number)
