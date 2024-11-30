@@ -1,5 +1,6 @@
 from PIL import Image, ImageOps, ImageFilter
 import numpy as np
+import scipy.ndimage as ndimage
 
 def _get_row_histogram(image, threshold=128):
     binary_image = image.point(lambda p: p> threshold and 255)
@@ -18,23 +19,43 @@ def _get_column_histogram(image, threshold=128):
 def _slice_vetically(image, row_histogram):
     slices = []
     in_slice = False
-    start = 0
+    i = image.width-1
+    start = i
+    slice_count = 0
+    flag = True
 
-    for i, value in enumerate(row_histogram):
+    while flag and i >= 0:
+        value = row_histogram[i]
         if value > 0 and not in_slice:
             in_slice = True
             start = i
         elif value == 0 and in_slice:
-            in_slice = False
-            cropped_image = image.crop((start, 0, i, image.height))
-            slices.append(cropped_image)
+            if slice_count < 7:
+                in_slice = False
+                cropped_image = image.crop((i, 0, start, image.height))
+                slices.append(cropped_image)
+                slice_count += 1
+            else:
+                in_slice = False
+                cropped_image = image.crop((i, 0, start, image.height))
+                column_histogram = _get_column_histogram(cropped_image)
+                _, merged_flag = _slice_horizontally(cropped_image, column_histogram, return_flag=True)
+                if not merged_flag:
+                    slices.append(cropped_image)
+                    slice_count += 1
+                else:
+                    flag = False
+        i -= 1
+
+    slices.reverse()
 
     return slices
 
-def _slice_horizontally(image, column_histogram):
+def _slice_horizontally(image, column_histogram, return_flag=False):
     slices = []
     in_slice = False
     start = 0
+    merged_flag = False
 
     for i, value in enumerate(column_histogram):
         if value > 0 and not in_slice:
@@ -48,6 +69,9 @@ def _slice_horizontally(image, column_histogram):
     merged_width = 0
     merged_height = 0
 
+    if len(slices) != 1:
+        merged_flag = True
+
     for slice in slices:
         width, height = slice.size
         merged_width = max(merged_width, width)
@@ -60,7 +84,10 @@ def _slice_horizontally(image, column_histogram):
         merged.paste(slice, (0, offset))
         offset += (slice.height + int(merged_height/50))
 
-    return merged
+    if return_flag:
+        return merged, merged_flag
+    else:
+        return merged
         
 def _slice_image(image, threshold=128):
     row_histogram = _get_row_histogram(image, threshold)
@@ -94,16 +121,42 @@ def _reduce_image(image, size=28):
     return padded_image
 
 def _denoise(image):
-    denoised = image.filter(ImageFilter.MedianFilter(size=3))
+    filter_size = image.height // 30
+    if (filter_size) % 2 == 0:
+        filter_size += 1
+
+    denoised = image.filter(ImageFilter.MedianFilter(size=filter_size))
+    denoised = ImageOps.invert(denoised)
+    object_threshold = denoised.height // 3
+
+    denoised = np.array(denoised)
+    labeled, num_features = ndimage.label(denoised)
+    object_slices = ndimage.find_objects(labeled)
+
+    mask = np.zeros_like(denoised, dtype=np.uint8)
+
+    for i, object_slice in enumerate(object_slices, start=1):
+        if object_slice is not None:
+            y_slice, x_slice = object_slice
+            width = x_slice.stop - x_slice.start
+            height = y_slice.stop - y_slice.start
+
+            if width < object_threshold and height < object_threshold:
+                mask[labeled==i] = 255
+
+    denoised[mask==255] = 0
+    denoised = Image.fromarray(denoised)
+    denoised = ImageOps.invert(denoised)
+
     return denoised
 
 def preprocess(image, threshold=128, size=28, invert=True):
     original = image
     image = _denoise(image)
-    image = image.point(lambda p: p> threshold and 255)
+    #image = image.point(lambda p: p> threshold and 255)
     slices = _slice_image(image, threshold)
     return_flag = False
-
+    
     while threshold < 256 and threshold >= 0 and (len(slices)!=7 and len(slices)!=8 and len(slices)!=9):
         if threshold == 0:
             threshold = 128
@@ -116,7 +169,7 @@ def preprocess(image, threshold=128, size=28, invert=True):
 
         image = original.point(lambda p: p> threshold and 255)
         slices = _slice_image(image, threshold)
-
+    
     if threshold==256:
         raise ValueError("There is no numbers detected")
 

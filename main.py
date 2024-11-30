@@ -11,15 +11,20 @@ import os
 # Call for the classification function
 def do_classification():
     classifier = Classifier(network, hangul_network)
+
     plate_focus.plate_focus(preview_label.file_path)
     plate = Image.open('plate.jpg').convert('L')
     if os.path.exists("plate.jpg"):
         os.remove("plate.jpg")
+    
     classifier.set_image(plate)
     license_number = classifier.get_license_plate()
-    print(license_number)
     vehicle_type = classifier.parse_license_plate()
-    print(vehicle_type)
+
+    license_label.config(text=f"License Number: {license_number}")
+    vehicle_label.config(text=f"Vehicle Type: {vehicle_type['vehicleBodyType']}")
+    usage_label.config(text=f"Usage: {vehicle_type['usage']}")
+    
 
 # import image from file dialog
 def import_image():
@@ -29,6 +34,10 @@ def import_image():
     if file_path:
         do_classification.image_path = file_path
         load_preview(file_path, preview_label)
+
+    license_label.config(text="License Number: ")
+    vehicle_label.config(text="Vehicle Type: ")
+    usage_label.config(text="Usage: ")
 
 # load image to preview label
 def load_preview(file_path, preview_label):
@@ -52,7 +61,7 @@ network.load_params("params.pkl")
 #prepare HangulConvNet
 hangul_network = HangulConvNet(input_dim=(1,28,28), 
                         conv_param = {'filter_num': 30, 'filter_size': 5, 'pad': 0, 'stride': 1},
-                        hidden_size=100, output_size=54, weight_init_std=0.01)
+                        hidden_size=500, output_size=54, weight_init_std=0.01)
 hangul_network.load_params("hangul-params.pkl")
 
 #prepare image
@@ -81,5 +90,13 @@ process_button.pack(side=tk.LEFT, padx=5)
 preview_label = tk.Label(root)
 preview_label.pack(pady=10)
 
-root.mainloop()
+license_label = tk.Label(root, text="License Number: ", font=("", 10))
+license_label.pack(pady=5)
 
+vehicle_label = tk.Label(root, text="Vehicle Type: ", font=("", 10))
+vehicle_label.pack(pady=5)
+
+usage_label = tk.Label(root, text="Usage: ", font=("", 10))
+usage_label.pack(pady=5)
+
+root.mainloop()
