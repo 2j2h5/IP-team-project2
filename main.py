@@ -51,6 +51,7 @@ hangul_network = HangulConvNet(input_dim=(1,28,28),
 hangul_network.load_params("hangul-params.pkl")
 
 #prepare image
+
 # image_path = 'images/number-plate/number-plate-clean-1.jpg'
 # image_path2 = 'images/number-plate/number-plate-clean-2.jpg'
 # image_path3 = 'images/number-plate/number-plate-clean-3.jpg'
@@ -76,3 +77,4 @@ preview_label = tk.Label(root)
 preview_label.pack(pady=10)
 
 root.mainloop()
+

@@ -32,6 +32,7 @@ def _slice_vetically(image, row_histogram):
     return slices
 
 def _slice_horizontally(image, column_histogram):
+    slices = []
     in_slice = False
     start = 0
 
@@ -42,7 +43,24 @@ def _slice_horizontally(image, column_histogram):
         elif value == 0 and in_slice:
             in_slice = False
             cropped_image = image.crop((0, start, image.width, i))
-            return cropped_image
+            slices.append(cropped_image)
+    
+    merged_width = 0
+    merged_height = 0
+
+    for slice in slices:
+        width, height = slice.size
+        merged_width = max(merged_width, width)
+        merged_height += height
+    
+    merged = Image.new("L", (merged_width, merged_height+(int(merged_height/50))), 255)
+    offset = 0
+
+    for slice in slices:
+        merged.paste(slice, (0, offset))
+        offset += (slice.height + int(merged_height/50))
+
+    return merged
         
 def _slice_image(image, threshold=128):
     row_histogram = _get_row_histogram(image, threshold)
@@ -80,13 +98,33 @@ def _denoise(image):
     return denoised
 
 def preprocess(image, threshold=128, size=28, invert=True):
+    original = image
     image = _denoise(image)
     image = image.point(lambda p: p> threshold and 255)
     slices = _slice_image(image, threshold)
+    return_flag = False
+
+    while threshold < 256 and threshold >= 0 and (len(slices)!=7 and len(slices)!=8):
+        if threshold == 0:
+            threshold = 128
+            return_flag = True
+
+        if return_flag:
+            threshold += 1
+        else:
+            threshold -= 1
+
+        image = original.point(lambda p: p> threshold and 255)
+        slices = _slice_image(image, threshold)
+
+    if threshold==256:
+        raise ValueError("There is no numbers detected")
+
     result = []
 
     if invert:
         for slice in slices:
+            slice.show()
             reduced_slice = _reduce_image(slice, size)
             inverted_slice = ImageOps.invert(reduced_slice)
             result.append(inverted_slice)
