@@ -9,20 +9,38 @@ class Classifier:
         self.plate_image = None
         self.slices = None
         self.license_plate = ""
+        self.korean_offset = 0
 
     def set_image(self, plate_image):
         self.plate_image = plate_image
         self.slices = None
         self.license_plate = ""
+        self.korean_offset = 0
 
     def get_license_plate(self, threshold=128):
         if self.plate_image:
             self.slices = preprocess(self.plate_image, threshold)
         else:
             raise ValueError("There is no plate image")
-        
-        number_slices = self.slices[:3] + self.slices[-4:]
-        korean_slices = self.slices[3:-4]
+      
+        if len(self.slices)==9:
+            number_slices = self.slices[:3] + self.slices[-4:]
+            korean_slices = self.slices[3:-4]
+            self.korean_offset = 3
+        elif len(self.slices)==7:
+            number_slices = self.slices[:2] + self.slices[-4:]
+            korean_slices = self.slices[2:-4]
+            self.korean_offset = 2
+        else:
+            determinant = self.slices[1:3]
+            if (determinant[0].width - determinant[1].width) > determinant[0].width/5:
+                number_slices = self.slices[:2] + self.slices[-4:]
+                korean_slices = self.slices[2:-4]
+                self.korean_offset = 2
+            else:
+                number_slices = self.slices[:3] + self.slices[-4:]
+                korean_slices = self.slices[3:-4]
+                self.korean_offset = 3
 
         for slice in number_slices:
             slice_array = np.array(slice)
@@ -41,15 +59,15 @@ class Classifier:
         scores = self.hangul_network.predict(korean_array)
         predicted_label = np.argmax(scores)
         predicted_label = KOREAN_LABEL[predicted_label]
-        self.license_plate = self.license_plate[:3] + predicted_label + self.license_plate[3:]
+        self.license_plate = self.license_plate[:self.korean_offset] + predicted_label + self.license_plate[self.korean_offset:]
 
         return self.license_plate
 
     def parse_license_plate(self):
         license_plate = self.license_plate
         # Separate numbers and Korean character from the license plate
-        numbers_part = license_plate[:3]  # First 3 digits
-        korean_char = license_plate[3]    # One Korean character
+        numbers_part = license_plate[:self.korean_offset]  # First 3 digits
+        korean_char = license_plate[self.korean_offset]    # One Korean character
 
         # Initialize variables
         vehicleBodyType = None

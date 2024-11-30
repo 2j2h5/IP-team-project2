@@ -104,7 +104,7 @@ def preprocess(image, threshold=128, size=28, invert=True):
     slices = _slice_image(image, threshold)
     return_flag = False
 
-    while threshold < 256 and threshold >= 0 and (len(slices)!=7 and len(slices)!=8):
+    while threshold < 256 and threshold >= 0 and (len(slices)!=7 and len(slices)!=8 and len(slices)!=9):
         if threshold == 0:
             threshold = 128
             return_flag = True
