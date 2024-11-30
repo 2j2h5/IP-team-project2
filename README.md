@@ -11,6 +11,11 @@ Image Processing 2024 Fall 4-person team project
 - **Chrysanthemum3552**
     - [Github](https://github.com/Chrysanthemum3552)
 
+# Installation
+ Install the required packages
+```bash
+pip install -r requirements.txt
+```
 
 # Structure
 ![Structure](./images/diagrams/structure-version-2.jpg)
