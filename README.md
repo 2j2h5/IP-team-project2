@@ -18,7 +18,7 @@ pip install -r requirements.txt
 ```
 
 # Structure
-![Structure](./images/diagrams/structure-version-2.jpg)
+![Structure](./images/diagrams/structure-version-3.jpg)
 
  This is the structure of the repository. The blue line represents the number prediction for a car license plate image using params.pkl and hangul-params.pkl after preprocessing the image. The params.pkl file is created by the train_conv_net code, which trains the simple_conv_net model using the MNIST dataset, as indicated by the orange line. The hangul-params.pkl is created by the train_hangul_conv_net code, which trains the Hangul Conv Net model usint ttf dataset in dataset/hangul folder, as indicated by the orange line too. The Simple Conv Net model and Hangul Conv Net model are consist of layers defined in the CNN_layers and layers modules, which utilize activation and loss functions.
 
